@@ -72,7 +72,7 @@
 
   async function loadTracking(apiBase, serviceId) {
     try {
-      const response = await fetch(`${apiBase}/service-track/${serviceId}`);
+      const response = await fetch(`${apiBase}/salesforce/service-track/${serviceId}`);
       const result = await response.json();
 
       if (!result.ok || !result.data?.track) {
