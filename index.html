@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Service Tracking</title>
+
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: #0f172a;
+    }
+
+    #map {
+      height: 100%;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+  // ============================
+  // CONFIG AMBIENTES
+  // ============================
+
+  const ENVIRONMENTS = {
+    dev: "http://127.0.0.1:8000",
+    devwin: "http://10.0.2.2:8000",
+    devmac: "http://127.0.0.1:8000",
+    qa: "https://field-service-dev-e78fc3d6d358.herokuapp.com",
+    prod: "https://field-service-c770e658da59.herokuapp.com"
+  };
+
+  // ============================
+  // MAPA
+  // ============================
+
+  const map = L.map('map').setView([0, 0], 2);
+
+  L.tileLayer(
+    'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    { attribution: '&copy; OpenStreetMap contributors' }
+  ).addTo(map);
+
+  // ============================
+  // UTIL
+  // ============================
+
+  function getQueryParams() {
+    const params = new URLSearchParams(window.location.search);
+    return {
+      serviceId: params.get("serviceId"),
+      env: params.get("env")
+    };
+  }
+
+  // ============================
+  // LOAD TRACK
+  // ============================
+
+  async function loadTracking(apiBase, serviceId) {
+    try {
+      const response = await fetch(`${apiBase}/service-track/${serviceId}`);
+      const result = await response.json();
+
+      if (!result.ok || !result.data?.track) {
+        throw new Error("Track inválido");
+      }
+
+      const points = result.data.track;
+
+      if (points.length === 0) {
+        throw new Error("Nenhum ponto encontrado");
+      }
+
+      const latlngs = points.map(p => [p.latitude, p.longitude]);
+
+      const polyline = L.polyline(latlngs, {
+        color: '#4f46e5',
+        weight: 4,
+        opacity: 0.9
+      }).addTo(map);
+
+      map.fitBounds(polyline.getBounds());
+
+      L.circleMarker(latlngs[0], {
+        radius: 8,
+        color: '#16a34a',
+        fillOpacity: 1
+      }).addTo(map).bindPopup("Início");
+
+      L.circleMarker(latlngs[latlngs.length - 1], {
+        radius: 8,
+        color: '#dc2626',
+        fillOpacity: 1
+      }).addTo(map).bindPopup("Fim");
+
+    } catch (error) {
+      console.error("Erro ao carregar tracking:", error);
+      alert("Erro ao carregar tracking");
+    }
+  }
+
+  // ============================
+  // INIT
+  // ============================
+
+  const { serviceId, env } = getQueryParams();
+
+  if (!serviceId) {
+    alert("serviceId não informado na URL");
+    throw new Error("Missing serviceId");
+  }
+
+  if (!env || !ENVIRONMENTS[env]) {
+    alert("Ambiente inválido. Use: devwin, devmac, qa ou prod");
+    throw new Error("Invalid environment");
+  }
+
+  const API_BASE = ENVIRONMENTS[env];
+
+  loadTracking(API_BASE, serviceId);
+
+</script>
+
+</body>
+</html>
