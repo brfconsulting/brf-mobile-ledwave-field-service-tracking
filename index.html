@@ -1,82 +1,91 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8" />
+<meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Service Tracking</title>
 
 <link rel="stylesheet"
-  href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+ href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
 <style>
 html, body {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  background: #0f172a;
-  font-family: Inter, sans-serif;
+  margin:0;
+  padding:0;
+  height:100%;
+  background:#0f172a;
+  font-family:Inter,sans-serif;
 }
 
-#map {
-  height: 100%;
-  width: 100%;
-}
+#map { height:100%; width:100%; }
 
 .panel {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  background: #111827;
-  color: white;
-  padding: 16px;
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-  z-index: 999;
-  font-size: 13px;
-  line-height: 1.5;
+  position:absolute;
+  top:20px;
+  right:20px;
+  background:#111827;
+  color:white;
+  padding:16px;
+  border-radius:12px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.4);
+  z-index:999;
+  font-size:13px;
+  line-height:1.6;
 }
+
+.legend {
+  position:absolute;
+  bottom:20px;
+  right:20px;
+  background:#111827;
+  color:white;
+  padding:14px;
+  border-radius:12px;
+  font-size:12px;
+  z-index:999;
+}
+
+.legend div { margin-bottom:6px; }
 
 .slider-container {
-  position: absolute;
-  bottom: 70px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 60%;
-  z-index: 999;
-}
-
-input[type=range] {
-  width: 100%;
+  position:absolute;
+  bottom:80px;
+  left:50%;
+  transform:translateX(-50%);
+  width:60%;
+  z-index:999;
+  color:white;
+  text-align:center;
 }
 
 .controls {
-  position: absolute;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 999;
+  position:absolute;
+  bottom:40px;
+  left:50%;
+  transform:translateX(-50%);
+  z-index:999;
 }
 
 button {
-  background: #4f46e5;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  cursor: pointer;
+  background:#4f46e5;
+  color:white;
+  border:none;
+  padding:8px 18px;
+  border-radius:6px;
+  cursor:pointer;
 }
 
 .badge {
-  position: absolute;
-  top: 20px;
-  left: 20px;
-  background: #4f46e5;
-  color: white;
-  padding: 8px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 600;
-  z-index: 999;
+  position:absolute;
+  top:20px;
+  left:20px;
+  background:#4f46e5;
+  color:white;
+  padding:8px 12px;
+  border-radius:20px;
+  font-size:12px;
+  font-weight:600;
+  z-index:999;
 }
 </style>
 </head>
@@ -84,10 +93,19 @@ button {
 
 <div id="map"></div>
 <div class="panel" id="infoPanel"></div>
+<div class="legend">
+  <div><span style="color:#3b82f6;">■</span> Azul → Próximo do início</div>
+  <div><span style="color:#8b5cf6;">■</span> Roxo → Meio do percurso</div>
+  <div><span style="color:#ef4444;">■</span> Vermelho → Próximo do fim</div>
+  <div><span style="color:#22c55e;">●</span> Início</div>
+  <div><span style="color:#ef4444;">●</span> Fim</div>
+</div>
+
 <div class="badge" id="envBadge"></div>
 
 <div class="slider-container">
-  <input type="range" id="timeline" min="0" max="0" value="0">
+  <div id="currentTime" style="margin-bottom:6px;"></div>
+  <input type="range" id="timeline" min="0" max="0" value="0" style="width:100%;">
 </div>
 
 <div class="controls">
@@ -95,154 +113,145 @@ button {
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/leaflet-polylinedecorator@1.7.0/dist/leaflet.polylineDecorator.min.js"></script>
 
 <script>
-const ENVIRONMENTS = {
-  qa: "https://field-service-dev-e78fc3d6d358.herokuapp.com",
-  prod: "https://field-service-c770e658da59.herokuapp.com"
+const ENVIRONMENTS={
+  qa:"https://field-service-dev-e78fc3d6d358.herokuapp.com",
+  prod:"https://field-service-c770e658da59.herokuapp.com"
 };
 
-const map = L.map('map');
-const light = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
-const dark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png');
+const map=L.map('map');
+const light=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
 light.addTo(map);
 
-L.control.layers({ "Light": light, "Dark": dark }).addTo(map);
-
-function getQueryParams() {
-  const params = new URLSearchParams(window.location.search);
-  return {
-    serviceId: params.get("serviceId"),
-    env: params.get("env")
-  };
+function getQueryParams(){
+  const p=new URLSearchParams(window.location.search);
+  return { serviceId:p.get("serviceId"), env:p.get("env") };
 }
 
-function calculateDistance(points) {
-  let total = 0;
-  for (let i = 1; i < points.length; i++) {
-    total += map.distance(points[i - 1], points[i]);
-  }
-  return total / 1000;
+function formatDateTime(dateStr){
+  const d=new Date(dateStr);
+  return d.toLocaleString("pt-BR",{
+    dateStyle:"full",
+    timeStyle:"medium"
+  });
 }
 
-function interpolateColor(ratio) {
-  if (ratio < 0.5) {
-    const t = ratio / 0.5;
-    return `rgb(${Math.round(0 + t * 128)}, 0, 255)`; // Azul -> Roxo
+function interpolateColor(ratio){
+  if(ratio<0.5){
+    const t=ratio/0.5;
+    return `rgb(${59+((139-59)*t)},${130+((92-130)*t)},${246+((246-246)*t)})`;
   } else {
-    const t = (ratio - 0.5) / 0.5;
-    return `rgb(255, 0, ${Math.round(255 - t * 255)})`; // Roxo -> Vermelho
+    const t=(ratio-0.5)/0.5;
+    return `rgb(${139+((239-139)*t)},${92+((68-92)*t)},${246-((246-68)*t)})`;
   }
 }
 
-async function loadTracking(apiBase, serviceId) {
-  try {
-    const response = await fetch(`${apiBase}/salesforce/service-track/${serviceId}`);
-    const result = await response.json();
+async function loadTracking(apiBase,serviceId){
+  const res=await fetch(`${apiBase}/salesforce/service-track/${serviceId}`);
+  const result=await res.json();
+  const track=result.data.track;
 
-    if (!result?.data?.track?.length) {
-      throw new Error("Track inválido ou vazio");
-    }
+  const latlngs=track.map(p=>[p.latitude,p.longitude]);
+  document.getElementById("timeline").max=latlngs.length-1;
 
-    const track = result.data.track;
-    const latlngs = track.map(p => [p.latitude, p.longitude]);
-    document.getElementById("timeline").max = latlngs.length - 1;
+  // Glow base
+  const glowLine=L.polyline(latlngs,{
+    color:"#ffffff",
+    weight:12,
+    opacity:0.15
+  }).addTo(map);
 
-    const fullLine = L.polyline(latlngs, { opacity: 0 }).addTo(map);
-
-    // Gradiente Azul → Roxo → Vermelho
-    for (let i = 1; i < latlngs.length; i++) {
-      const ratio = i / latlngs.length;
-      const color = interpolateColor(ratio);
-
-      L.polyline([latlngs[i - 1], latlngs[i]], {
-        color,
-        weight: 5,
-        opacity: 0.9
-      }).addTo(map);
-    }
-
-    map.fitBounds(fullLine.getBounds());
-
-    // Início
-    L.marker(latlngs[0], {
-      icon: L.divIcon({
-        html: "🟢 <b>Início</b>",
-        className: "",
-        iconSize: [80, 20]
-      })
+  // Linha colorida
+  const segments=[];
+  for(let i=1;i<latlngs.length;i++){
+    const ratio=i/latlngs.length;
+    const color=interpolateColor(ratio);
+    const seg=L.polyline([latlngs[i-1],latlngs[i]],{
+      color,
+      weight:5,
+      opacity:0.9
     }).addTo(map);
-
-    // Fim
-    L.marker(latlngs[latlngs.length - 1], {
-      icon: L.divIcon({
-        html: "🔴 <b>Fim</b>",
-        className: "",
-        iconSize: [60, 20]
-      })
-    }).addTo(map);
-
-    const movingMarker = L.circleMarker(latlngs[0], {
-      radius: 7,
-      color: '#ffffff',
-      fillColor: '#22d3ee',
-      fillOpacity: 1
-    }).addTo(map);
-
-    let index = 0;
-    let playing = false;
-    const speed = 250; // mais lento (ms)
-
-    function step() {
-      if (!playing) return;
-      if (index >= latlngs.length - 1) {
-        playing = false;
-        document.getElementById("playBtn").innerText = "Play";
-        return;
-      }
-
-      index++;
-      movingMarker.setLatLng(latlngs[index]);
-      document.getElementById("timeline").value = index;
-
-      setTimeout(step, speed);
-    }
-
-    document.getElementById("playBtn").addEventListener("click", () => {
-      playing = !playing;
-      document.getElementById("playBtn").innerText = playing ? "Pause" : "Play";
-      if (playing) step();
-    });
-
-    document.getElementById("timeline").addEventListener("input", e => {
-      index = parseInt(e.target.value);
-      movingMarker.setLatLng(latlngs[index]);
-    });
-
-    const distance = calculateDistance(latlngs);
-    const hours = (latlngs.length / 60).toFixed(2);
-
-    document.getElementById("infoPanel").innerHTML = `
-      <strong>Resumo do Serviço</strong><br/>
-      Pontos: ${latlngs.length}<br/>
-      Duração: ${hours}h<br/>
-      Distância: ${distance.toFixed(2)} km
-    `;
-
-  } catch (error) {
-    console.error("Erro ao carregar tracking:", error);
-    alert("Erro ao carregar percurso do técnico.");
+    segments.push(seg);
   }
+
+  map.fitBounds(glowLine.getBounds());
+
+  // Início
+  L.circleMarker(latlngs[0],{
+    radius:10,
+    color:"#ffffff",
+    weight:2,
+    fillColor:"#22c55e",
+    fillOpacity:1
+  }).addTo(map).bindTooltip("Início",{permanent:true,offset:[0,-15]});
+
+  // Fim
+  L.circleMarker(latlngs[latlngs.length-1],{
+    radius:10,
+    color:"#ffffff",
+    weight:2,
+    fillColor:"#ef4444",
+    fillOpacity:1
+  }).addTo(map).bindTooltip("Fim",{permanent:true,offset:[0,-15]});
+
+  const movingMarker=L.circleMarker(latlngs[0],{
+    radius:8,
+    color:"#ffffff",
+    weight:2,
+    fillColor:"#22d3ee",
+    fillOpacity:1
+  }).addTo(map);
+
+  let index=0;
+  let playing=false;
+  const speed=600;
+
+  function updateUI(){
+    movingMarker.setLatLng(latlngs[index]);
+    document.getElementById("timeline").value=index;
+    document.getElementById("currentTime").innerText=
+      formatDateTime(track[index].timestamp);
+
+    segments.forEach((s,i)=>{
+      s.setStyle({ opacity: i<index?1:0.2 });
+    });
+  }
+
+  function step(){
+    if(!playing) return;
+    if(index>=latlngs.length-1){
+      playing=false;
+      document.getElementById("playBtn").innerText="Play";
+      return;
+    }
+    index++;
+    updateUI();
+    setTimeout(step,speed);
+  }
+
+  document.getElementById("playBtn").addEventListener("click",()=>{
+    playing=!playing;
+    document.getElementById("playBtn").innerText=playing?"Pause":"Play";
+    if(playing) step();
+  });
+
+  document.getElementById("timeline").addEventListener("input",e=>{
+    index=parseInt(e.target.value);
+    updateUI();
+  });
+
+  updateUI();
+
+  document.getElementById("infoPanel").innerHTML=`
+    <strong>Resumo do Serviço</strong><br/>
+    Pontos: ${latlngs.length}<br/>
+  `;
 }
 
-const { serviceId, env } = getQueryParams();
-if (!serviceId) throw new Error("Missing serviceId");
-if (!env || !ENVIRONMENTS[env]) throw new Error("Invalid env");
-
-document.getElementById("envBadge").innerText = env.toUpperCase();
-loadTracking(ENVIRONMENTS[env], serviceId);
+const {serviceId,env}=getQueryParams();
+document.getElementById("envBadge").innerText=env.toUpperCase();
+loadTracking(ENVIRONMENTS[env],serviceId);
 </script>
-
 </body>
 </html>
