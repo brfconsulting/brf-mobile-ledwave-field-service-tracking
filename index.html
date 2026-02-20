@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8"/>
@@ -14,43 +14,68 @@ html, body {
   padding:0;
   height:100%;
   background:#0f172a;
-  font-family:Inter,sans-serif;
+  font-family:Inter, sans-serif;
 }
 
 #map { height:100%; width:100%; }
 
-.panel {
+/* ===== CARD BASE (GLASS) ===== */
+.card {
   position:absolute;
-  top:20px;
-  right:20px;
-  background:#111827;
+  background:rgba(17,24,39,0.75);
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+  border:1px solid rgba(255,255,255,0.08);
   color:white;
-  padding:16px;
-  border-radius:12px;
-  box-shadow:0 10px 30px rgba(0,0,0,0.4);
+  padding:18px;
+  border-radius:16px;
+  box-shadow:0 15px 40px rgba(0,0,0,0.35);
   z-index:999;
   font-size:13px;
   line-height:1.6;
-  width:260px;
+  transition:all 0.2s ease;
 }
 
-.legend {
+.card h3 {
+  margin:0 0 10px 0;
+  font-size:14px;
+  font-weight:600;
+  letter-spacing:0.4px;
+  opacity:0.85;
+}
+
+/* POSIÇÕES */
+#servicePanel { top:20px; left:20px; width:320px; }
+
+#infoPanel { bottom:20px; left:20px; width:260px; }
+
+.legend { bottom:20px; right:20px; width:260px; }
+
+/* TOP RIGHT CONTROLS */
+.top-controls {
   position:absolute;
-  bottom:20px;
+  top:20px;
   right:20px;
-  background:#111827;
-  color:white;
-  padding:14px;
-  border-radius:12px;
-  font-size:12px;
+  display:flex;
+  gap:12px;
+  align-items:center;
   z-index:999;
 }
 
-.legend div { margin-bottom:6px; }
+/* BADGE */
+.badge {
+  background:linear-gradient(135deg,#22d3ee,#3b82f6);
+  padding:8px 14px;
+  border-radius:20px;
+  font-size:12px;
+  font-weight:600;
+  color:white;
+}
 
+/* SLIDER */
 .slider-container {
   position:absolute;
-  bottom:80px;
+  bottom:90px;
   left:50%;
   transform:translateX(-50%);
   width:60%;
@@ -60,15 +85,15 @@ html, body {
 
 #currentTime {
   margin-bottom:8px;
-  background:rgba(0,0,0,0.75);
-  padding:6px 10px;
-  border-radius:8px;
+  background:rgba(0,0,0,0.65);
+  padding:8px 14px;
+  border-radius:12px;
   font-size:13px;
   font-weight:500;
-  color:#ffffff;
   display:inline-block;
 }
 
+/* CONTROLES */
 .controls {
   position:absolute;
   bottom:40px;
@@ -76,31 +101,34 @@ html, body {
   transform:translateX(-50%);
   z-index:999;
   display:flex;
-  gap:8px;
+  gap:12px;
   flex-wrap:wrap;
   justify-content:center;
 }
 
+/* BOTÕES MODERNOS */
 button, select {
-  background:#4f46e5;
+  background:linear-gradient(135deg,#4f46e5,#6366f1);
   color:white;
   border:none;
-  padding:8px 18px;
-  border-radius:6px;
+  padding:10px 18px;
+  border-radius:12px;
   cursor:pointer;
+  font-weight:500;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  transition:all 0.2s ease;
+  box-shadow:0 6px 18px rgba(79,70,229,0.4);
 }
 
-.badge {
-  position:absolute;
-  top:20px;
-  left:20px;
-  background:#4f46e5;
-  color:white;
-  padding:8px 12px;
-  border-radius:20px;
-  font-size:12px;
-  font-weight:600;
-  z-index:999;
+button:hover {
+  transform:translateY(-2px);
+  box-shadow:0 10px 25px rgba(79,70,229,0.6);
+}
+
+select {
+  padding:10px 14px;
 }
 </style>
 </head>
@@ -108,16 +136,18 @@ button, select {
 
 <div id="map"></div>
 
-<div class="panel" id="infoPanel"></div>
-
-<!-- NOVO CARD (mesmo padrão visual) -->
-<div class="panel" id="servicePanel" style="top:200px; right:20px;">
-  <strong>Informações do Serviço</strong><br/>
+<!-- SERVICE INFO (SUPERIOR ESQUERDO) -->
+<div id="servicePanel" class="card">
+  <h3>Informações do Serviço</h3>
   Carregando...
 </div>
 
-<div class="legend">
-  <strong>Legenda</strong><br/>
+<!-- RESUMO (INFERIOR ESQUERDO) -->
+<div id="infoPanel" class="card"></div>
+
+<!-- LEGENDA (INFERIOR DIREITO) -->
+<div class="card legend">
+  <h3>Legenda</h3>
   <div><span style="color:#22d3ee;">●</span> Ponto Azul → Atual</div>
   <div><span style="color:#22c55e;">●</span> Ponto Verde → Início</div>
   <div><span style="color:#ef4444;">●</span> Ponto Vermelho → Fim</div>
@@ -126,18 +156,22 @@ button, select {
   <div><span style="color:#ef4444;">■</span> Trecho Vermelho → Próximo do fim</div>
 </div>
 
-<div class="badge" id="envBadge"></div>
+<!-- TOP RIGHT (ZOOM + TEMA + BADGE) -->
+<div class="top-controls">
+  <div class="badge" id="envBadge"></div>
+</div>
 
+<!-- SLIDER -->
 <div class="slider-container">
   <div id="currentTime"></div>
   <input type="range" id="timeline" min="0" max="0" value="0" style="width:100%;">
 </div>
 
+<!-- CONTROLES -->
 <div class="controls">
-  <button id="goStartBtn">Início</button>
-  <button id="playBtn">Play</button>
-  <button id="pauseBtn">Pausar</button>
-  <button id="goEndBtn">Fim</button>
+  <button id="goStartBtn">⏮ Início</button>
+  <button id="playBtn">▶ Play</button>
+  <button id="goEndBtn">⏭ Fim</button>
 
   <select id="speedControl">
     <option value="1">1x</option>
@@ -166,7 +200,7 @@ light.addTo(map);
 L.control.layers(
   { "Light": light, "Dark": dark },
   null,
-  { position: "bottomleft" }
+  { position: "topright" }
 ).addTo(map);
 
 function getQueryParams(){
@@ -208,7 +242,7 @@ async function loadServiceInfo(apiBase, serviceId){
     const s=await res.json();
 
     document.getElementById("servicePanel").innerHTML=`
-      <strong>Informações do Serviço</strong><br/>
+      <h3>Informações do Serviço</h3>
       <b>Nome:</b> ${s.nome}<br/>
       <b>Status:</b> ${s.status}<br/>
       <b>Início:</b> ${formatDateTime(s.dataHoraInicio)}<br/>
@@ -233,50 +267,26 @@ async function loadTracking(apiBase,serviceId){
     const latlngs=track.map(p=>[p.latitude,p.longitude]);
     document.getElementById("timeline").max=latlngs.length-1;
 
-    const glowLine=L.polyline(latlngs,{
-      color:"#ffffff",
-      weight:14,
-      opacity:0.15
-    }).addTo(map);
+    const glowLine=L.polyline(latlngs,{color:"#ffffff",weight:14,opacity:0.15}).addTo(map);
 
     const segments=[];
     for(let i=1;i<latlngs.length;i++){
       const ratio=i/latlngs.length;
       const color=interpolateColor(ratio);
-      const seg=L.polyline([latlngs[i-1],latlngs[i]],{
-        color,
-        weight:6,
-        opacity:0.85
-      }).addTo(map);
+      const seg=L.polyline([latlngs[i-1],latlngs[i]],{color,weight:6,opacity:0.85}).addTo(map);
       segments.push(seg);
     }
 
     map.fitBounds(glowLine.getBounds());
 
-    L.circleMarker(latlngs[0],{
-      radius:10,
-      color:"#ffffff",
-      weight:2,
-      fillColor:"#22c55e",
-      fillOpacity:1
-    }).addTo(map)
-      .bindTooltip("Início",{permanent:true,direction:"top",offset:[0,-18]});
+    L.circleMarker(latlngs[0],{radius:10,color:"#ffffff",weight:2,fillColor:"#22c55e",fillOpacity:1})
+      .addTo(map).bindTooltip("Início",{permanent:true,direction:"top",offset:[0,-18]});
 
-    L.circleMarker(latlngs[latlngs.length-1],{
-      radius:10,
-      color:"#ffffff",
-      weight:2,
-      fillColor:"#ef4444",
-      fillOpacity:1
-    }).addTo(map)
-      .bindTooltip("Fim",{permanent:true,direction:"top",offset:[0,-18]});
+    L.circleMarker(latlngs[latlngs.length-1],{radius:10,color:"#ffffff",weight:2,fillColor:"#ef4444",fillOpacity:1})
+      .addTo(map).bindTooltip("Fim",{permanent:true,direction:"top",offset:[0,-18]});
 
     const movingMarker=L.circleMarker(latlngs[0],{
-      radius:8,
-      color:"#ffffff",
-      weight:2,
-      fillColor:"#22d3ee",
-      fillOpacity:1
+      radius:8,color:"#ffffff",weight:2,fillColor:"#22d3ee",fillOpacity:1
     }).addTo(map);
 
     let index=0;
@@ -291,9 +301,7 @@ async function loadTracking(apiBase,serviceId){
       document.getElementById("currentTime").innerText=formatted;
 
       movingMarker.bindTooltip(formatted,{
-        permanent:true,
-        direction:"top",
-        offset:[0,-18]
+        permanent:true,direction:"top",offset:[0,-18]
       }).openTooltip();
 
       segments.forEach((s,i)=>{
@@ -305,7 +313,7 @@ async function loadTracking(apiBase,serviceId){
       if(!playing) return;
       if(index>=latlngs.length-1){
         playing=false;
-        document.getElementById("playBtn").innerText="Play";
+        document.getElementById("playBtn").innerHTML="▶ Play";
         return;
       }
       index++;
@@ -316,23 +324,16 @@ async function loadTracking(apiBase,serviceId){
 
     document.getElementById("playBtn").addEventListener("click",()=>{
       playing=!playing;
-      document.getElementById("playBtn").innerText=playing?"Pause":"Play";
+      document.getElementById("playBtn").innerHTML = playing ? "⏸ Pause" : "▶ Play";
       if(playing) step();
     });
 
-    document.getElementById("pauseBtn").addEventListener("click",()=>{
-      playing=false;
-      document.getElementById("playBtn").innerText="Play";
-    });
-
     document.getElementById("goStartBtn").addEventListener("click",()=>{
-      index=0;
-      updateUI();
+      index=0; updateUI();
     });
 
     document.getElementById("goEndBtn").addEventListener("click",()=>{
-      index=latlngs.length-1;
-      updateUI();
+      index=latlngs.length-1; updateUI();
     });
 
     document.getElementById("timeline").addEventListener("input",e=>{
@@ -346,7 +347,7 @@ async function loadTracking(apiBase,serviceId){
     const hours=(latlngs.length/60).toFixed(2);
 
     document.getElementById("infoPanel").innerHTML=`
-      <strong>Resumo do Percurso</strong><br/>
+      <h3>Resumo do Percurso</h3>
       Pontos coletados: ${latlngs.length}<br/>
       Duração: ${hours}h<br/>
       Distância: ${distance.toFixed(2)} km
