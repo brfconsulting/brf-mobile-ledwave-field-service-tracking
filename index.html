@@ -19,37 +19,49 @@ html, body {
 
 #map { height:100%; width:100%; }
 
-/* ===== CARD BASE (GLASS) ===== */
+/* ===== CARD BASE ===== */
 .card {
   position:absolute;
-  background:rgba(17,24,39,0.75);
-  backdrop-filter:blur(14px);
-  -webkit-backdrop-filter:blur(14px);
-  border:1px solid rgba(255,255,255,0.08);
+  background:rgba(17,24,39,0.78);
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+  border:1px solid rgba(255,255,255,0.06);
   color:white;
-  padding:18px;
-  border-radius:16px;
-  box-shadow:0 15px 40px rgba(0,0,0,0.35);
+  padding:12px 14px;
+  border-radius:14px;
+  box-shadow:0 10px 25px rgba(0,0,0,0.35);
   z-index:999;
-  font-size:13px;
-  line-height:1.6;
-  transition:all 0.2s ease;
+  font-size:12px;
+  line-height:1.5;
+  max-width:260px;
 }
 
 .card h3 {
-  margin:0 0 10px 0;
-  font-size:14px;
+  margin:0 0 6px 0;
+  font-size:13px;
   font-weight:600;
-  letter-spacing:0.4px;
-  opacity:0.85;
+  letter-spacing:0.3px;
+  opacity:0.9;
 }
 
 /* POSIÇÕES */
-#servicePanel { top:20px; left:20px; width:320px; }
+#servicePanel { 
+  top:20px; 
+  left:20px; 
+  width:260px;
+}
 
-#infoPanel { bottom:20px; left:20px; width:260px; }
+#infoPanel { 
+  bottom:20px; 
+  left:20px; 
+  width:220px;
+}
 
-.legend { bottom:20px; right:20px; width:260px; }
+.legend { 
+  bottom:20px; 
+  right:20px; 
+  width:220px; 
+}
 
 /* TOP RIGHT CONTROLS */
 .top-controls {
@@ -57,17 +69,21 @@ html, body {
   top:20px;
   right:20px;
   display:flex;
-  gap:12px;
+  gap:10px;
   align-items:center;
   z-index:999;
+}
+
+.leaflet-top.leaflet-right {
+  top:80px !important;
 }
 
 /* BADGE */
 .badge {
   background:linear-gradient(135deg,#22d3ee,#3b82f6);
-  padding:8px 14px;
-  border-radius:20px;
-  font-size:12px;
+  padding:6px 12px;
+  border-radius:18px;
+  font-size:11px;
   font-weight:600;
   color:white;
 }
@@ -83,14 +99,17 @@ html, body {
   text-align:center;
 }
 
+/* CONTRASTE MELHORADO */
 #currentTime {
   margin-bottom:8px;
-  background:rgba(0,0,0,0.65);
-  padding:8px 14px;
-  border-radius:12px;
+  background:rgba(15,23,42,0.95);
+  color:#ffffff;
+  padding:8px 16px;
+  border-radius:14px;
   font-size:13px;
   font-weight:500;
   display:inline-block;
+  box-shadow:0 6px 18px rgba(0,0,0,0.4);
 }
 
 /* CONTROLES */
@@ -101,34 +120,42 @@ html, body {
   transform:translateX(-50%);
   z-index:999;
   display:flex;
-  gap:12px;
+  gap:10px;
   flex-wrap:wrap;
   justify-content:center;
 }
 
-/* BOTÕES MODERNOS */
+/* BOTÕES */
 button, select {
   background:linear-gradient(135deg,#4f46e5,#6366f1);
   color:white;
   border:none;
-  padding:10px 18px;
-  border-radius:12px;
+  padding:8px 14px;
+  border-radius:10px;
   cursor:pointer;
   font-weight:500;
   display:flex;
   align-items:center;
   gap:6px;
   transition:all 0.2s ease;
-  box-shadow:0 6px 18px rgba(79,70,229,0.4);
+  box-shadow:0 6px 16px rgba(79,70,229,0.4);
+  font-size:12px;
 }
 
 button:hover {
   transform:translateY(-2px);
-  box-shadow:0 10px 25px rgba(79,70,229,0.6);
+  box-shadow:0 8px 22px rgba(79,70,229,0.6);
 }
 
+/* SELECT COM CONTRASTE CORRETO */
 select {
-  padding:10px 14px;
+  background:linear-gradient(135deg,#4f46e5,#6366f1);
+  color:white;
+}
+
+select option {
+  background:#1f2937;
+  color:white;
 }
 </style>
 </head>
@@ -136,16 +163,16 @@ select {
 
 <div id="map"></div>
 
-<!-- SERVICE INFO (SUPERIOR ESQUERDO) -->
+<!-- SERVICE INFO -->
 <div id="servicePanel" class="card">
   <h3>Informações do Serviço</h3>
   Carregando...
 </div>
 
-<!-- RESUMO (INFERIOR ESQUERDO) -->
+<!-- RESUMO -->
 <div id="infoPanel" class="card"></div>
 
-<!-- LEGENDA (INFERIOR DIREITO) -->
+<!-- LEGENDA -->
 <div class="card legend">
   <h3>Legenda</h3>
   <div><span style="color:#22d3ee;">●</span> Ponto Azul → Atual</div>
@@ -156,7 +183,7 @@ select {
   <div><span style="color:#ef4444;">■</span> Trecho Vermelho → Próximo do fim</div>
 </div>
 
-<!-- TOP RIGHT (ZOOM + TEMA + BADGE) -->
+<!-- TOP RIGHT -->
 <div class="top-controls">
   <div class="badge" id="envBadge"></div>
 </div>
