@@ -22,7 +22,7 @@ html, body {
 .panel {
   position:absolute;
   top:20px;
-  right:20px;
+  right:120px;
   background:#111827;
   color:white;
   padding:16px;
@@ -54,8 +54,18 @@ html, body {
   transform:translateX(-50%);
   width:60%;
   z-index:999;
-  color:white;
   text-align:center;
+}
+
+#currentTime {
+  margin-bottom:8px;
+  background:rgba(0,0,0,0.75);
+  padding:6px 10px;
+  border-radius:8px;
+  font-size:13px;
+  font-weight:500;
+  color:#ffffff;
+  display:inline-block;
 }
 
 .controls {
@@ -105,7 +115,7 @@ button {
 <div class="badge" id="envBadge"></div>
 
 <div class="slider-container">
-  <div id="currentTime" style="margin-bottom:6px;"></div>
+  <div id="currentTime"></div>
   <input type="range" id="timeline" min="0" max="0" value="0" style="width:100%;">
 </div>
 
@@ -122,10 +132,17 @@ const ENVIRONMENTS={
 };
 
 const map=L.map('map');
+
 const light=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
 const dark=L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png');
+
 light.addTo(map);
-L.control.layers({ "Light": light, "Dark": dark }).addTo(map);
+
+L.control.layers(
+  { "Light": light, "Dark": dark },
+  null,
+  { position: "bottomleft" }
+).addTo(map);
 
 function getQueryParams(){
   const p=new URLSearchParams(window.location.search);
@@ -174,7 +191,7 @@ async function loadTracking(apiBase,serviceId){
     const glowLine=L.polyline(latlngs,{
       color:"#ffffff",
       weight:14,
-      opacity:0.12
+      opacity:0.15
     }).addTo(map);
 
     const segments=[];
@@ -183,8 +200,8 @@ async function loadTracking(apiBase,serviceId){
       const color=interpolateColor(ratio);
       const seg=L.polyline([latlngs[i-1],latlngs[i]],{
         color,
-        weight:5,
-        opacity:0.9
+        weight:6,
+        opacity:0.85
       }).addTo(map);
       segments.push(seg);
     }
@@ -217,6 +234,8 @@ async function loadTracking(apiBase,serviceId){
       fillOpacity:1
     }).addTo(map);
 
+    let movingTooltip=null;
+
     let index=0;
     let playing=false;
     const speed=600;
@@ -224,11 +243,24 @@ async function loadTracking(apiBase,serviceId){
     function updateUI(){
       movingMarker.setLatLng(latlngs[index]);
       document.getElementById("timeline").value=index;
-      document.getElementById("currentTime").innerText=
-        formatDateTime(track[index].timestamp);
+
+      const formatted=formatDateTime(track[index].dateTime);
+
+      document.getElementById("currentTime").innerText=formatted;
+
+      if(movingTooltip){
+        movingMarker.unbindTooltip();
+      }
+
+      movingMarker.bindTooltip(formatted,{
+        permanent:true,
+        direction:"top",
+        offset:[0,-18],
+        className:""
+      }).openTooltip();
 
       segments.forEach((s,i)=>{
-        s.setStyle({ opacity: i<index?1:0.2 });
+        s.setStyle({ opacity: i<index?1:0.45 });
       });
     }
 
