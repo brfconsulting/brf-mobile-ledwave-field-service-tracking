@@ -19,54 +19,65 @@ html, body {
 
 #map { height:100%; width:100%; }
 
-/* ===== CARD BASE ===== */
+/* ===== CARD ===== */
 .card {
   position:absolute;
-  background:rgba(17,24,39,0.78);
-  backdrop-filter:blur(10px);
-  -webkit-backdrop-filter:blur(10px);
-  border:1px solid rgba(255,255,255,0.06);
-  color:white;
-  padding:12px 14px;
-  border-radius:14px;
-  box-shadow:0 10px 25px rgba(0,0,0,0.35);
+  background:rgba(56,189,248,0.10);
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+  border:1px solid rgba(255,255,255,0.15);
+  color:#e2e8f0;
+  padding:8px 10px;
+  border-radius:10px;
+  box-shadow:0 4px 18px rgba(0,0,0,0.25);
   z-index:999;
-  font-size:12px;
-  line-height:1.5;
-  max-width:260px;
+  font-size:11px;
+  line-height:1.35;
+  max-width:210px;
+  transition:all 0.25s ease;
 }
 
 .card h3 {
-  margin:0 0 6px 0;
-  font-size:13px;
+  margin:0 0 5px 0;
+  font-size:12px;
   font-weight:600;
-  letter-spacing:0.3px;
-  opacity:0.9;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
 }
 
 /* POSIÇÕES */
 #servicePanel { 
-  top:20px; 
+  top:55px; 
   left:20px; 
-  width:260px;
+  width:210px;
 }
 
 #infoPanel { 
-  bottom:20px; 
-  left:20px; 
-  width:220px;
+  display:none;
 }
 
 .legend { 
-  bottom:20px; 
+  bottom:120px; 
   right:20px; 
-  width:220px; 
+  width:190px; 
 }
 
-/* TOP RIGHT CONTROLS */
+/* BOTÃO MINIMIZAR */
+.minimize-btn {
+  cursor:pointer;
+  font-size:12px;
+  opacity:0.7;
+}
+
+.minimized #serviceContent {
+  display:none;
+}
+
+/* CONTROLES SUPERIORES */
 .top-controls {
   position:absolute;
-  top:20px;
+  top:55px;
   right:20px;
   display:flex;
   gap:10px;
@@ -75,63 +86,67 @@ html, body {
 }
 
 .leaflet-top.leaflet-right {
-  top:80px !important;
+  top:120px !important;
 }
 
-/* BADGE */
 .badge {
   background:linear-gradient(135deg,#22d3ee,#3b82f6);
-  padding:6px 12px;
-  border-radius:18px;
-  font-size:11px;
+  padding:5px 10px;
+  border-radius:14px;
+  font-size:10px;
   font-weight:600;
   color:white;
 }
 
-/* SLIDER */
+/* TIMELINE */
 .slider-container {
   position:absolute;
-  bottom:90px;
+  bottom:70px;
   left:50%;
   transform:translateX(-50%);
-  width:60%;
+  width:55%;
   z-index:999;
   text-align:center;
 }
 
-/* CONTRASTE MELHORADO */
 #currentTime {
-  margin-bottom:8px;
-  background:rgba(15,23,42,0.95);
+  margin-bottom:4px;
+  background:rgba(15,23,42,0.9);
   color:#ffffff;
-  padding:8px 16px;
-  border-radius:14px;
-  font-size:13px;
-  font-weight:500;
+  padding:6px 12px;
+  border-radius:12px;
+  font-size:12px;
   display:inline-block;
-  box-shadow:0 6px 18px rgba(0,0,0,0.4);
+}
+
+#metrics {
+  margin-bottom:4px;
+  background:rgba(15,23,42,0.75);
+  color:#cbd5e1;
+  padding:5px 12px;
+  border-radius:12px;
+  font-size:11px;
+  display:inline-block;
 }
 
 /* CONTROLES */
 .controls {
   position:absolute;
-  bottom:40px;
+  bottom:35px;
   left:50%;
   transform:translateX(-50%);
   z-index:999;
   display:flex;
-  gap:10px;
-  flex-wrap:wrap;
+  gap:6px;
   justify-content:center;
 }
 
-/* BOTÕES */
 button, select {
   background:linear-gradient(135deg,#4f46e5,#6366f1);
   color:white;
   border:none;
-  padding:8px 14px;
-  border-radius:10px;
+  padding:6px 10px;
+  border-radius:8px;
   cursor:pointer;
   font-weight:500;
   display:flex;
@@ -139,7 +154,7 @@ button, select {
   gap:6px;
   transition:all 0.2s ease;
   box-shadow:0 6px 16px rgba(79,70,229,0.4);
-  font-size:12px;
+  font-size:11px;
 }
 
 button:hover {
@@ -147,7 +162,6 @@ button:hover {
   box-shadow:0 8px 22px rgba(79,70,229,0.6);
 }
 
-/* SELECT COM CONTRASTE CORRETO */
 select {
   background:linear-gradient(135deg,#4f46e5,#6366f1);
   color:white;
@@ -165,8 +179,13 @@ select option {
 
 <!-- SERVICE INFO -->
 <div id="servicePanel" class="card">
-  <h3>Informações do Serviço</h3>
-  Carregando...
+  <h3>
+    Informações do Serviço
+    <span class="minimize-btn" onclick="toggleCard()">–</span>
+  </h3>
+  <div id="serviceContent">
+    Carregando...
+  </div>
 </div>
 
 <!-- RESUMO -->
@@ -191,6 +210,7 @@ select option {
 <!-- SLIDER -->
 <div class="slider-container">
   <div id="currentTime"></div>
+  <div id="metrics"></div>
   <input type="range" id="timeline" min="0" max="0" value="0" style="width:100%;">
 </div>
 
@@ -212,6 +232,13 @@ select option {
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
+function toggleCard(){
+  const card=document.getElementById("servicePanel");
+  const btn=document.querySelector(".minimize-btn");
+  card.classList.toggle("minimized");
+  btn.innerText = card.classList.contains("minimized") ? "+" : "–";
+}
+
 const ENVIRONMENTS={
   qa:"https://field-service-dev-e78fc3d6d358.herokuapp.com",
   prod:"https://field-service-c770e658da59.herokuapp.com"
@@ -268,8 +295,7 @@ async function loadServiceInfo(apiBase, serviceId){
 
     const s=await res.json();
 
-    document.getElementById("servicePanel").innerHTML=`
-      <h3>Informações do Serviço</h3>
+    document.getElementById("serviceContent").innerHTML=`
       <b>Nome:</b> ${s.nome}<br/>
       <b>Status:</b> ${s.status}<br/>
       <b>Início:</b> ${formatDateTime(s.dataHoraInicio)}<br/>
@@ -372,6 +398,9 @@ async function loadTracking(apiBase,serviceId){
 
     const distance=calculateDistance(latlngs);
     const hours=(latlngs.length/60).toFixed(2);
+
+    document.getElementById("metrics").innerText =
+      `Pontos coletados: ${latlngs.length} | Duração: ${hours}h | Distância: ${distance.toFixed(2)} km`;
 
     document.getElementById("infoPanel").innerHTML=`
       <h3>Resumo do Percurso</h3>
